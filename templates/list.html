@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Posts</title>
+    <!-- 引入 Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        ul ul {
+            margin-left: 20px;
+        }
+        li {
+            margin: 5px 0;
+        }
+        .list-group-item {
+            display: block;
+            padding: 0.5rem 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 0.25rem;
+        }
+        .list-group-item a {
+            text-decoration: none;
+            color: #007bff;
+        }
+        .list-group-item a:hover {
+            text-decoration: underline;
+        }
+        .list-group-item .delete-btn {
+            float: right;
+        }
+    </style>
+</head>
+<body class="container mt-5">
+    <h1 class="mb-4">All Posts</h1>
+    
+    <!-- 新建文章表单 -->
+    <div class="mb-4">
+        <form id="newPostForm" class="form-inline mb-3">
+            <div class="form-group mr-2">
+                <label for="contentName" class="sr-only">Content Name:</label>
+                <input type="text" id="contentName" name="contentName" class="form-control" placeholder="Enter post name" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Create</button>
+        </form>
+        <!-- 搜索框 -->
+        <div class="form-group mb-3">
+            <input type="text" id="searchInput" class="form-control" placeholder="Search posts...">
+        </div>
+        <!-- 构建按钮 -->
+        <button id="buildButton" class="btn btn-success mb-4">Build</button>
+    </div>
+
+    <!-- 文章列表 -->
+    <div id="directory-tree" class="list-group"></div>
+
+    <!-- 引入 Bootstrap JS 和 jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const treeData = JSON.parse('{{ .tree | toJSON }}');
+            const treeContainer = document.getElementById('directory-tree');
+
+            function createTree(data, container) {
+                const ul = document.createElement('ul');
+                ul.classList.add('list-group');
+                data.forEach(node => {
+                    const li = document.createElement('li');
+                    li.classList.add('list-group-item');
+                    li.textContent = node.name;
+                    if (node.posts) {
+                        const postsUl = document.createElement('ul');
+                        postsUl.classList.add('list-group');
+                        node.posts.forEach(post => {
+                            const postLi = document.createElement('li');
+                            postLi.classList.add('list-group-item');
+                            const postLink = document.createElement('a');
+                            postLink.href = `/update?file=${encodeURIComponent(post.path)}`;
+                            postLink.textContent = post.name;
+                            postLink.classList.add('d-block');
+
+                            const deleteButton = document.createElement('button');
+                            deleteButton.textContent = 'Delete';
+                            deleteButton.classList.add('btn', 'btn-danger', 'btn-sm', 'delete-btn');
+                            deleteButton.addEventListener('click', function() {
+                                if (confirm('Are you sure you want to delete this post?')) {
+                                    deletePost(post.path, postLi);
+                                }
+                            });
+
+                            postLi.appendChild(postLink);
+                            postLi.appendChild(deleteButton);
+                            postsUl.appendChild(postLi);
+                        });
+                        li.appendChild(postsUl);
+                    }
+                    if (node.children) {
+                        createTree(node.children, li);
+                    }
+                    ul.appendChild(li);
+                });
+                container.appendChild(ul);
+            }
+
+            createTree([treeData], treeContainer);
+
+            document.getElementById('newPostForm').addEventListener('submit', function(event) {
+                event.preventDefault();
+                const contentName = document.getElementById('contentName').value;
+                fetch('/hugo/new', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ contentName: contentName })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.filePath) {
+                        window.location.href = `/update?file=${encodeURIComponent(data.filePath)}`;
+                    } else {
+                        alert('Failed to create the post.');
+                    }
+                });
+            });
+
+            document.getElementById('buildButton').addEventListener('click', function() {
+                fetch('/hugo/build', {
+                    method: 'POST',
+                })
+                .then(response => {
+                    if (response.ok) {
+                        alert('Build successful');
+                    } else {
+                        alert('Failed to build.');
+                    }
+                });
+            });
+
+            // 搜索功能
+            document.getElementById('searchInput').addEventListener('input', function(event) {
+                const query = event.target.value.toLowerCase();
+                filterPosts(query);
+            });
+
+            function filterPosts(query) {
+                const items = document.querySelectorAll('#directory-tree .list-group-item');
+                items.forEach(item => {
+                    const text = item.textContent.toLowerCase();
+                    if (text.includes(query)) {
+                        item.style.display = '';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            }
+
+            function deletePost(filePath, postElement) {
+                fetch('/hugo/delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ filePath: filePath })
+                })
+                .then(response => {
+                    if (response.ok) {
+                        postElement.remove();
+                    } else {
+                        alert('Failed to delete the post.');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

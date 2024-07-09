@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Post</title>
+    <!-- 引入 Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/editor.md/css/editormd.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/editor.md/editormd.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 90%;
+        }
+        .editor {
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="container mt-5">
+    <h1 class="mb-4">Update Post</h1>
+    <div class="editor">
+        <form id="updatePostForm" class="form-group">
+            <label for="filePath">File Path:</label>
+            <input type="text" id="filePath" name="filePath" class="form-control mb-3" readonly>
+            <button type="submit" class="btn btn-primary mt-3">Update</button>
+            <div id="content-editor">
+                <textarea id="content" name="content" style="display:none;"></textarea>
+            </div>
+            <br>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var editor = editormd("content-editor", {
+                width: "100%",
+                height: 640,
+                path: "https://cdn.jsdelivr.net/npm/editor.md/lib/",
+                onload: function() {
+                    // 初始化完成后执行的逻辑
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const filePath = urlParams.get('file');
+
+                    if (filePath) {
+                        document.getElementById('filePath').value = filePath;
+                        fetch(`/api/getContent?filePath=${encodeURIComponent(filePath)}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                editor.setMarkdown(data.content);
+                            });
+                    }
+                }
+            });
+
+            document.getElementById('updatePostForm').addEventListener('submit', function(event) {
+                event.preventDefault();
+                const filePath = document.getElementById('filePath').value;
+                const content = editor.getMarkdown();
+                fetch('/hugo/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ filePath: filePath, content: content })
+                })
+                .then(response => {
+                    if (response.ok) {
+                        alert('File updated successfully');
+                    } else {
+                        response.json().then(data => {
+                            alert(`Error: ${data.error}`);
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+    <!-- 引入 Bootstrap JS 和 jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
