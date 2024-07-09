@@ -61,7 +61,7 @@
                 event.preventDefault();
                 const filePath = document.getElementById('filePath').value;
                 const content = editor.getMarkdown();
-                fetch('/hugo/update', {
+                fetch('/api/hugo/update', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

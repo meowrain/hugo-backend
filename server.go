@@ -47,9 +47,6 @@ type Directory struct {
 
 func main() {
 	router := gin.Default()
-	// 使用 cookie 存储会话，并设置密钥
-	store := cookie.NewStore([]byte("your-secret-key"))
-	router.Use(sessions.Sessions("mysession", store))
 	tmpl := template.Must(template.New("").Funcs(template.FuncMap{
 		"toJSON": func(v interface{}) (string, error) {
 			a, err := json.Marshal(v)
@@ -58,14 +55,19 @@ func main() {
 	}).ParseFS(templates, "templates/*.html"))
 
 	router.SetHTMLTemplate(tmpl)
-
+	// 使用 cookie 存储会话，并设置密钥
+	store := cookie.NewStore([]byte("your-secret-key"))
+	router.Use(sessions.Sessions("mysession", store))
+	router.GET("/api", func(c *gin.Context) {
+		c.Redirect(http.StatusFound, "/api/list")
+	})
 	// Routes for rendering HTML pages
-	router.GET("/login", func(c *gin.Context) {
+	router.GET("/api/login", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "login.html", nil)
 	})
-	router.POST("/login", loginHandler)
+	router.POST("/api/login", loginHandler)
 	// API routes
-	auth := router.Group("/")
+	auth := router.Group("/api")
 	auth.Use(authRequired)
 	{
 		auth.GET("/list", listPostsHandler)
@@ -75,7 +77,7 @@ func main() {
 		auth.POST("/hugo/new", hugoNewHandler)
 		auth.POST("/hugo/update", hugoUpdateHandler)
 		auth.POST("/hugo/build", hugoBuildHandler)
-		auth.GET("/api/getContent", getContentHandler)
+		auth.GET("/getContent", getContentHandler)
 		auth.POST("/hugo/delete", hugoDeleteHandler)
 	}
 	log.Println("Server started at :3000")
@@ -102,7 +104,7 @@ func authRequired(c *gin.Context) {
 	user := session.Get("user")
 
 	if user == nil {
-		c.Redirect(http.StatusTemporaryRedirect, "/login")
+		c.Redirect(http.StatusTemporaryRedirect, "/api/login")
 		c.Abort()
 		return
 	}

@@ -82,7 +82,7 @@
                             const postLi = document.createElement('li');
                             postLi.classList.add('list-group-item');
                             const postLink = document.createElement('a');
-                            postLink.href = `/update?file=${encodeURIComponent(post.path)}`;
+                            postLink.href = `/api/update?file=${encodeURIComponent(post.path)}`;
                             postLink.textContent = post.name;
                             postLink.classList.add('d-block');
 
@@ -114,7 +114,7 @@
             document.getElementById('newPostForm').addEventListener('submit', function(event) {
                 event.preventDefault();
                 const contentName = document.getElementById('contentName').value;
-                fetch('/hugo/new', {
+                fetch('/api/hugo/new', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -132,7 +132,7 @@
             });
 
             document.getElementById('buildButton').addEventListener('click', function() {
-                fetch('/hugo/build', {
+                fetch('/api/hugo/build', {
                     method: 'POST',
                 })
                 .then(response => {
@@ -163,7 +163,7 @@
             }
 
             function deletePost(filePath, postElement) {
-                fetch('/hugo/delete', {
+                fetch('/api/hugo/delete', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
