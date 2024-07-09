@@ -3,4 +3,3 @@ auth:
   password: password
 imgbed:
   domain: http://xxx.com
-  token: admin

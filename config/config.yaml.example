@@ -2,5 +2,4 @@ auth:
   username: admin
   password: password
 imgbed:
-  domain: https://xxx.com
-  token: admin
+  domain: http://xxx.com
