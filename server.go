@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"html/template"
 	"hugo_backend/config"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -19,6 +20,9 @@ import (
 
 //go:embed templates/*
 var templates embed.FS
+
+//go:embed static/*
+var staticFiles embed.FS
 
 type HugoNewRequest struct {
 	ContentName string `json:"contentName"`
@@ -53,14 +57,18 @@ func main() {
 			return string(a), err
 		},
 	}).ParseFS(templates, "templates/*.html"))
-
 	router.SetHTMLTemplate(tmpl)
+	// 设置静态文件路由
+	staticFS, err := fs.Sub(staticFiles, "static")
+	if err != nil {
+		log.Fatal(err)
+	}
+	// 设置静态文件路由
+	router.StaticFS("/api/static", http.FS(staticFS))
+
 	// 使用 cookie 存储会话，并设置密钥
 	store := cookie.NewStore([]byte("your-secret-key"))
 	router.Use(sessions.Sessions("mysession", store))
-	router.GET("/api", func(c *gin.Context) {
-		c.Redirect(http.StatusFound, "/api/list")
-	})
 	// Routes for rendering HTML pages
 	router.GET("/api/login", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "login.html", nil)
