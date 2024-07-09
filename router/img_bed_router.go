@@ -9,9 +9,9 @@ import (
 
 func SetUpImageBedRoute(router *gin.Engine) {
 	ImageBedGroup := router.Group("/api")
+	ImageBedGroup.GET("/i/:year/:month/:day/:filename", controllers.GetImage)
 	ImageBedGroup.Use(middleware.AuthRequired)
 	{
 		ImageBedGroup.POST("/upload", controllers.UploadImage)
-		ImageBedGroup.GET("/i/:year/:month/:day/:filename", controllers.GetImage)
 	}
 }
