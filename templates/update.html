@@ -41,6 +41,9 @@
                 width: "100%",
                 height: 640,
                 path: "/api/static/lib/",
+                imageUpload: true,
+                imageFormats: ["jpg", "jpeg", "gif", "png", "bmp", "webp"],
+                imageUploadURL: "/api/uploadImage",
                 onload: function() {
                     // 初始化完成后执行的逻辑
                     const urlParams = new URLSearchParams(window.location.search);
@@ -53,6 +56,41 @@
                             .then(data => {
                                 editor.setMarkdown(data.content);
                             });
+                    }
+                }
+            });
+
+            // 捕获粘贴事件
+            document.getElementById('content-editor').addEventListener('paste', function(event) {
+                var clipboardData = event.clipboardData || window.clipboardData;
+                var items = clipboardData.items;
+
+                for (var i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf("image") !== -1) {
+                        var file = items[i].getAsFile();
+                        var formData = new FormData();
+                        formData.append("file", file);
+
+                        fetch('/api/upload', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.result === "success") {
+                                // 将图片URL插入到Editor.md编辑器中
+                                editor.insertValue(`![image](${data.url})`);
+                            } else {
+                                alert("Image upload failed");
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert("Image upload failed");
+                        });
+
+                        event.preventDefault();
+                        break;
                     }
                 }
             });
@@ -81,7 +119,6 @@
         });
     </script>
     <!-- 引入 Bootstrap JS 和 jQuery -->
-    <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script> -->
     <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

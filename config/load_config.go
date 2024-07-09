@@ -13,10 +13,14 @@ type Config struct {
 		UserName string `yaml:"username"`
 		PassWord string `yaml:"password"`
 	} `yaml:"auth"`
+	ImgBed struct {
+		Domain string `yaml:"domain"`
+	}
 }
 type GlobalConfig struct {
 	UserName string
 	PassWord string
+	Domain   string
 }
 
 //go:embed config.yaml
@@ -47,5 +51,6 @@ func LoadFromFile() error {
 	}
 	GlobalConfigInstance.UserName = cfg.Auth.UserName
 	GlobalConfigInstance.PassWord = cfg.Auth.PassWord
+	GlobalConfigInstance.Domain = cfg.ImgBed.Domain
 	return nil
 }
