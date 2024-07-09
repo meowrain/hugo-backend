@@ -19,10 +19,15 @@ import (
 )
 
 // 定义一个常量作为秘钥（在实际应用中，请从配置文件或环境变量中获取）
-// var secretKey string = config.GlobalConfigInstance.Token
+var secretKey string = config.GlobalConfigInstance.Token
 
 func UploadImage(c *gin.Context) {
 	file, err := c.FormFile("file")
+	token := c.PostForm("token")
+	if token != secretKey {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid API key"})
+		return
+	}
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to get uploaded file"})
 		return
