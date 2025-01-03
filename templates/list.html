@@ -7,16 +7,20 @@
     <!-- 引入 Bootstrap CSS -->
     <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <style>
+        /* 移除列表的默认样式，设置内边距为0 */
         ul {
             list-style-type: none;
             padding-left: 0;
         }
+        /* 二级列表的左边距为20px */
         ul ul {
             margin-left: 20px;
         }
+        /* 列表项的上下外边距为5px */
         li {
             margin: 5px 0;
         }
+        /* 设置列表项的样式，包括块级显示、内边距、外边距和边框 */
         .list-group-item {
             display: block;
             padding: 0.5rem 1rem;
@@ -24,13 +28,16 @@
             border: 1px solid #ddd;
             border-radius: 0.25rem;
         }
+        /* 设置链接的样式，移除下划线，设置颜色为蓝色 */
         .list-group-item a {
             text-decoration: none;
             color: #007bff;
         }
+        /* 鼠标悬停时添加下划线 */
         .list-group-item a:hover {
             text-decoration: underline;
         }
+        /* 设置删除按钮的样式，浮动到右边 */
         .list-group-item .delete-btn {
             float: right;
         }
@@ -64,10 +71,14 @@
     <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
     <script>
+        // 当DOM加载完成后执行以下代码
         document.addEventListener('DOMContentLoaded', function () {
+            // 将服务器端传递的JSON数据解析为JavaScript对象
             const treeData = JSON.parse('{{ .tree | toJSON }}');
+            // 获取用于显示目录树的容器元素
             const treeContainer = document.getElementById('directory-tree');
 
+            // 递归创建目录树
             function createTree(data, container) {
                 const ul = document.createElement('ul');
                 ul.classList.add('list-group');
@@ -82,6 +93,7 @@
                             const postLi = document.createElement('li');
                             postLi.classList.add('list-group-item');
                             const postLink = document.createElement('a');
+                            // 设置文章链接的URL，包含文章的路径
                             postLink.href = `/api/update?file=${encodeURIComponent(post.path)}`;
                             postLink.textContent = post.name;
                             postLink.classList.add('d-block');
@@ -89,8 +101,10 @@
                             const deleteButton = document.createElement('button');
                             deleteButton.textContent = 'Delete';
                             deleteButton.classList.add('btn', 'btn-danger', 'btn-sm', 'delete-btn');
+                            // 为删除按钮添加点击事件监听器
                             deleteButton.addEventListener('click', function() {
                                 if (confirm('Are you sure you want to delete this post?')) {
+                                    // 调用删除文章的函数
                                     deletePost(post.path, postLi);
                                 }
                             });
@@ -109,11 +123,14 @@
                 container.appendChild(ul);
             }
 
+            // 调用创建目录树的函数，传入根节点数据
             createTree([treeData], treeContainer);
 
+            // 为新建文章表单添加提交事件监听器
             document.getElementById('newPostForm').addEventListener('submit', function(event) {
                 event.preventDefault();
                 const contentName = document.getElementById('contentName').value;
+                // 发送POST请求到服务器，创建新文章
                 fetch('/api/hugo/new', {
                     method: 'POST',
                     headers: {
@@ -124,14 +141,17 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.filePath) {
-                        window.location.href = `/update?file=${encodeURIComponent(data.filePath)}`;
+                        // 如果成功创建文章，重定向到文章编辑页面
+                        window.location.href = `/api/update?file=${encodeURIComponent(data.filePath)}`;
                     } else {
                         alert('Failed to create the post.');
                     }
                 });
             });
 
+            // 为构建按钮添加点击事件监听器
             document.getElementById('buildButton').addEventListener('click', function() {
+                // 发送POST请求到服务器，触发构建操作
                 fetch('/api/hugo/build', {
                     method: 'POST',
                 })
@@ -144,12 +164,14 @@
                 });
             });
 
-            // 搜索功能
+            // 为搜索框添加输入事件监听器
             document.getElementById('searchInput').addEventListener('input', function(event) {
                 const query = event.target.value.toLowerCase();
+                // 调用过滤文章的函数
                 filterPosts(query);
             });
 
+            // 过滤文章的函数，根据搜索框中的内容显示或隐藏文章
             function filterPosts(query) {
                 const items = document.querySelectorAll('#directory-tree .list-group-item');
                 items.forEach(item => {
@@ -162,6 +184,7 @@
                 });
             }
 
+            // 删除文章的函数，发送POST请求到服务器删除文章
             function deletePost(filePath, postElement) {
                 fetch('/api/hugo/delete', {
                     method: 'POST',
