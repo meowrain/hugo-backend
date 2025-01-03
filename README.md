@@ -28,6 +28,16 @@
 
 找到对应你架构的可执行文件，然后把这个放在你的hugo根目录下，把该程序挂在后台运行
 
+也可以直接把项目git clone下来，然后make，拿到自己架构的可执行程序，在那个目录下面创建一个config.yaml文件，内容是
+
+```yaml
+auth:
+  username: admin # 填你的博客用户名
+  password: password # 填你的博客密码
+imgbed:
+  domain: http://xxx.com # 填你的博客域名，比如你的域名是cat.cn 那就是https://cat.cn
+```
+
 把scripts/deploy.sh中的配置修改成你自己的，然后把这个也拷贝到hugo根目录下
 
 然后安装CaddyServer，把CaddyServer的配置文件Caddyfile拷贝到hugo根目录下，然后启动CaddyServer
