@@ -15,6 +15,7 @@ var templates embed.FS
 var staticFiles embed.FS
 
 func main() {
+	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 	// 设置模板
 	router.SetBlogBackEndTemplateRoutes(templates, r)
