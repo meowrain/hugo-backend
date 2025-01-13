@@ -2,4 +2,4 @@ auth:
   username: admin # 填你的博客用户名
   password: password # 填你的博客密码
 imgbed:
-  domain: http://xxx.com # 填你的博客域名，比如你的域名是cat.cn 那就是https://cat.cn
+  domain: http://127.0.0.1:3000 # 填你的博客域名，比如你的域名是cat.cn 那就是https://cat.cn

@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"github.com/gen2brain/avif"
 	"hugo_backend/config"
 	"hugo_backend/utils"
 	"image"
@@ -14,7 +15,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/chai2010/webp"
 	"github.com/gin-gonic/gin"
 )
 
@@ -62,33 +62,38 @@ func UploadImage(c *gin.Context) {
 		return
 	}
 
-	// 构建 WebP 文件路径
+	// 构建 AVIF 文件路径
 	randomString, err := utils.GenerateRandomString(6)
 	if err != nil {
 		log.Println("构建随机字符串失败")
 	}
 	timestamp := now.UnixNano()
 	fileName := randomString + strconv.FormatInt(timestamp, 10)
-	webpFileName := fmt.Sprintf("%s.webp", fileName)
-	webpFilePath := filepath.Join(uploadPath, webpFileName)
+	avifFileName := fmt.Sprintf("%s.avif", fileName)
+	avifFilePath := filepath.Join(uploadPath, avifFileName)
 
-	// 创建 WebP 文件
-	out, err := os.Create(webpFilePath)
+	// 创建 AVIF 文件
+	out, err := os.Create(avifFilePath)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create WebP file"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create avif file"})
 		return
 	}
 	defer out.Close()
-
-	// 编码并保存图片为 WebP 格式
-	err = webp.Encode(out, img, &webp.Options{Lossless: true})
+	avifOptions := avif.Options{
+		Quality:           85, // 降低质量
+		QualityAlpha:      85,
+		Speed:             10, // 提高编码速度
+		ChromaSubsampling: image.YCbCrSubsampleRatio444,
+	}
+	// 编码并保存图片为 Avif 格式
+	err = avif.Encode(out, img, avifOptions)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to encode image to WebP"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to encode image to avif"})
 		return
 	}
 
-	// 返回 WebP 文件的 URL
-	imageURL := fmt.Sprintf("%s/api/i/%s/%s/%s/%s", config.GlobalConfigInstance.Domain, year, month, day, webpFileName)
+	// 返回 avif 文件的 URL
+	imageURL := fmt.Sprintf("%s/api/i/%s/%s/%s/%s", config.GlobalConfigInstance.Domain, year, month, day, avifFileName)
 	c.JSON(http.StatusOK, gin.H{"result": "success", "code": http.StatusOK, "url": imageURL})
 }
 

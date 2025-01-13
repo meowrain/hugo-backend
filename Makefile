@@ -33,13 +33,13 @@ build: create-out-dir $(PLATFORMS)
 
 # 针对每个平台编译
 $(PLATFORMS):
-	GOOS=$(word 1, $(subst /, ,$@)) GOARCH=$(word 2, $(subst /, ,$@)) \
+	CGO_ENABLED=1 GOOS=$(word 1, $(subst /, ,$@)) GOARCH=$(word 2, $(subst /, ,$@)) \
 	$(GO) build -o $(OUT_DIR)/$(PROJECT_NAME)-$(word 1, $(subst /, ,$@))-$(word 2, $(subst /, ,$@))$(if $(findstring windows,$@),.exe) $(SRC_DIR)
 
 # 测试
 .PHONY: test
 test:
-	$(GO) test ./...
+	CGO_ENABLED=1 $(GO) test ./...
 
 # 安装依赖
 .PHONY: deps

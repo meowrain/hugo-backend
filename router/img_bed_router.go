@@ -1,10 +1,8 @@
 package router
 
 import (
-	"hugo_backend/controllers"
-	"hugo_backend/middleware"
-
 	"github.com/gin-gonic/gin"
+	"hugo_backend/controllers"
 )
 
 // SetUpImageBedRoute 设置图片床服务的路由。
@@ -18,7 +16,7 @@ func SetUpImageBedRoute(router *gin.Engine) {
 	ImageBedGroup.GET("/i/:year/:month/:day/:filename", controllers.GetImage)
 
 	// 为该组中的所有路由使用 AuthRequired 中间件
-	ImageBedGroup.Use(middleware.AuthRequired)
+	//ImageBedGroup.Use(middleware.AuthRequired)
 
 	// 添加一个 POST 路由，用于上传图片
 	ImageBedGroup.POST("/upload", controllers.UploadImage)
