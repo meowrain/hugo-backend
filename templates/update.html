@@ -381,10 +381,18 @@
                 tags.forEach(tag => {
                     const tagElement = document.createElement('div');
                     tagElement.className = 'tag-item';
-                    tagElement.innerHTML = `
-                        ${tag}
-                        <span class="tag-remove" onclick="removeTag('${tag}')">&times;</span>
-                    `;
+                    // 创建文本节点，显示 tag 内容
+                    const tagText = document.createTextNode(tag + ' ');
+                    // 创建删除图标，并添加点击事件监听器
+                    const removeSpan = document.createElement('span');
+                    removeSpan.className = 'tag-remove';
+                    removeSpan.textContent = '×';
+                    removeSpan.style.cursor = 'pointer';
+                    removeSpan.addEventListener('click', () => {
+                        removeTag(tag);
+                    });
+                    tagElement.appendChild(tagText);
+                    tagElement.appendChild(removeSpan);
                     container.appendChild(tagElement);
                 });
             }
