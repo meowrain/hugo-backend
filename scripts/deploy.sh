@@ -21,8 +21,8 @@ echo -e "${YELLOW} Back to hugo-blog directory${NC}\n"
 cd -
 
 # 上传到github
-echo -e "${YELLOW} Start push to github....${NC}\n"
-git add .
-git commit -m "posts added"
-git push -u origin main
-echo -e "${GREEN} push over! ${NC}\n"
+# echo -e "${YELLOW} Start push to github....${NC}\n"
+# git add .
+# git commit -m "posts added"
+# git push -u origin main
+# echo -e "${GREEN} push over! ${NC}\n"
