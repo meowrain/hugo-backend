@@ -1,39 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hugo Blog Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <h1>Hugo Blog Management</h1>
 
-    <h2>Create New Post</h2>
-    <form id="newPostForm">
-        <label for="contentName">Content Name:</label>
-        <input type="text" id="contentName" name="contentName" required>
-        <button type="submit">Create</button>
-    </form>
+<body class="bg-gray-50">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-4xl font-bold text-gray-800 text-center mb-8">Hugo Blog Management</h1>
 
-    <h2>Post Content</h2>
-    <pre id="postContent"></pre>
+        <div class="bg-white p-6 rounded-lg shadow mb-6">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Create New Post</h2>
+            <form id="newPostForm" class="space-y-4">
+                <div>
+                    <label for="contentName" class="block text-sm font-medium text-gray-700">Content Name:</label>
+                    <input type="text" id="contentName" name="contentName" required
+                        class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-500">
+                </div>
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Create</button>
+            </form>
+        </div>
 
-    <h2>Update Post</h2>
-    <form id="updatePostForm">
-        <label for="filePath">File Path:</label>
-        <input type="text" id="filePath" name="filePath" required>
-        <br>
-        <label for="content">Content:</label>
-        <textarea id="content" name="content" rows="10" cols="50" required></textarea>
-        <br>
-        <button type="submit">Update</button>
-    </form>
+        <div class="bg-white p-6 rounded-lg shadow mb-6">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Post Content</h2>
+            <pre id="postContent" class="bg-gray-100 p-4 rounded"></pre>
+        </div>
 
-    <h2>Build and Deploy</h2>
-    <button id="buildButton">Build and Deploy</button>
+        <div class="bg-white p-6 rounded-lg shadow mb-6">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Update Post</h2>
+            <form id="updatePostForm" class="space-y-4">
+                <div>
+                    <label for="filePath" class="block text-sm font-medium text-gray-700">File Path:</label>
+                    <input type="text" id="filePath" name="filePath" required
+                        class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="content" class="block text-sm font-medium text-gray-700">Content:</label>
+                    <textarea id="content" name="content" rows="10" required
+                        class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-500"></textarea>
+                </div>
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Update</button>
+            </form>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Build and Deploy</h2>
+            <button id="buildButton" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Build and
+                Deploy</button>
+        </div>
+    </div>
 
     <script>
-        document.getElementById('newPostForm').addEventListener('submit', function(event) {
+        document.getElementById('newPostForm').addEventListener('submit', function (event) {
             event.preventDefault();
             const contentName = document.getElementById('contentName').value;
             fetch('/hugo/new', {
@@ -43,13 +64,13 @@
                 },
                 body: JSON.stringify({ contentName: contentName })
             })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('postContent').textContent = data.content;
-            });
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('postContent').textContent = data.content;
+                });
         });
 
-        document.getElementById('updatePostForm').addEventListener('submit', function(event) {
+        document.getElementById('updatePostForm').addEventListener('submit', function (event) {
             event.preventDefault();
             const filePath = document.getElementById('filePath').value;
             const content = document.getElementById('content').value;
@@ -60,23 +81,24 @@
                 },
                 body: JSON.stringify({ filePath: filePath, content: content })
             })
-            .then(response => {
-                if (response.ok) {
-                    alert('File updated successfully');
-                }
-            });
+                .then(response => {
+                    if (response.ok) {
+                        alert('File updated successfully');
+                    }
+                });
         });
 
-        document.getElementById('buildButton').addEventListener('click', function() {
+        document.getElementById('buildButton').addEventListener('click', function () {
             fetch('/hugo/build', {
                 method: 'POST'
             })
-            .then(response => {
-                if (response.ok) {
-                    alert('Site built and deployed successfully');
-                }
-            });
+                .then(response => {
+                    if (response.ok) {
+                        alert('Site built and deployed successfully');
+                    }
+                });
         });
     </script>
 </body>
+
 </html>

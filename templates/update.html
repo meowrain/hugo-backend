@@ -1,51 +1,427 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Update Post</title>
-    <!-- 引入 Bootstrap CSS -->
-    <link href="/api/static/lib/bootstrap.min.css" rel="stylesheet">
+    <title>更新文章</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/api/static/lib/editormd.min.css" />
     <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://cdn.bootcdn.net/ajax/libs/editor-md/1.5.0/editormd.min.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        .metadata-editor {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background-color: #f8fafc;
+            border-radius: 0.5rem;
         }
-        .container {
-            max-width: 90%;
+
+        .tag-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
         }
-        .editor {
-            width: 100%;
+
+        .tag-item {
+            display: flex;
+            align-items: center;
+            background-color: #e5e7eb;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+        }
+
+        .tag-remove {
+            margin-left: 0.5rem;
+            cursor: pointer;
+            color: #ef4444;
+        }
+
+        /* 添加modal样式 */
+        #metadataModal {
+            z-index: 9999;
+            /* 确保modal显示在最上层 */
+        }
+
+        /* 添加modal内容样式 */
+        .modal-content {
+            position: relative;
+            z-index: 10000;
+            /* 确保modal内容显示在遮罩层之上 */
         }
     </style>
 </head>
-<body class="container mt-5">
-    <h1 class="mb-4">Update Post</h1>
-    <div class="editor">
-        <form id="updatePostForm" class="form-group">
-            <label for="filePath">File Path:</label>
-            <input type="text" id="filePath" name="filePath" class="form-control mb-3" readonly>
-            <button type="submit" class="btn btn-primary mt-3">Update</button>
-            <div id="content-editor">
-                <textarea id="content" name="content" style="display:none;"></textarea>
+
+<body class="bg-gray-50">
+    <div class="container mx-auto px-4 py-8">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">更新文章</h1>
+            <div class="space-x-4">
+                <button id="publishButton"
+                    class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition duration-200">发布</button>
+                <a href="/api/list"
+                    class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition duration-200">返回列表</a>
             </div>
-            <br>
-        </form>
+        </div>
+
+        <!-- 添加Modal -->
+        <div id="metadataModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center">
+            <div class="modal-content bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold">编辑文章信息</h2>
+                    <button id="closeModal" class="text-gray-500 hover:text-gray-700">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">标题</label>
+                        <input type="text" id="title" name="title"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">日期</label>
+                        <input type="datetime-local" id="date" name="date"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">描述</label>
+                        <textarea id="description" name="description" rows="2"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">标签</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="tagInput"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <button type="button" id="addTagBtn"
+                                class="mt-1 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">添加</button>
+                        </div>
+                        <div id="tagContainer" class="tag-container"></div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">分类</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="categoryInput"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <button type="button" id="addCategoryBtn"
+                                class="mt-1 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">添加</button>
+                        </div>
+                        <div id="categoryContainer" class="tag-container"></div>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-end space-x-4">
+                    <button id="cancelModal"
+                        class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                        取消
+                    </button>
+                    <button id="saveAndPublish" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">
+                        保存并发布
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <form id="updatePostForm" class="space-y-4">
+                <div>
+                    <label for="filePath" class="block text-sm font-medium text-gray-700">文件路径：</label>
+                    <input type="text" id="filePath" name="filePath"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        readonly>
+                </div>
+
+                <div id="content-editor">
+                    <textarea id="content" name="content" style="display:none;"></textarea>
+                </div>
+
+                <button type="submit"
+                    class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition duration-200">保存更新</button>
+            </form>
+        </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // 解析YAML的函数
+            function parseYamlFrontMatter(content) {
+                // 使用支持 CRLF 的正则表达式
+                const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+                if (!match) return null;
+
+                const yaml = match[1];
+                // 改为 let 以便后面合并默认值时重新赋值
+                let metadata = {};
+                // 使用支持 CRLF 的分隔符
+                const lines = yaml.split(/\r?\n/);
+                let currentKey = null;
+                let currentArray = null;
+                let currentObject = null;
+                let indentLevel = 0;
+
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i];
+                    if (!line.trim()) continue;
+
+                    const indent = line.match(/^\s*/)[0].length;
+                    const trimmedLine = line.trim();
+
+                    // 顶级键处理
+                    if (indent === 0 && trimmedLine.includes(':')) {
+                        const [key, ...values] = trimmedLine.split(':');
+                        const value = values.join(':').trim();
+                        currentKey = key.trim();
+                        indentLevel = 0;
+
+                        if (value) {
+                            metadata[currentKey] = value;
+                            currentArray = null;
+                            currentObject = null;
+                        } else {
+                            // 检查下一行是否为数组项
+                            let nextLine = '';
+                            for (let j = i + 1; j < lines.length; j++) {
+                                if (lines[j].trim()) {
+                                    nextLine = lines[j].trim();
+                                    break;
+                                }
+                            }
+                            if (nextLine.startsWith('- ')) {
+                                metadata[currentKey] = [];
+                                currentArray = metadata[currentKey];
+                                currentObject = null;
+                            } else {
+                                metadata[currentKey] = {};
+                                currentArray = null;
+                                currentObject = metadata[currentKey];
+                            }
+                        }
+                    }
+                    // 处理数组项
+                    else if (trimmedLine.startsWith('- ') && indent > indentLevel) {
+                        if (currentArray) {
+                            const value = trimmedLine.substring(2).trim();
+                            currentArray.push(value);
+                        }
+                    }
+                    // 处理嵌套对象
+                    else if (indent > indentLevel && trimmedLine.includes(':')) {
+                        const [key, ...values] = trimmedLine.split(':');
+                        const value = values.join(':').trim();
+                        const trimmedKey = key.trim();
+
+                        if (currentObject) {
+                            if (value) {
+                                currentObject[trimmedKey] = value;
+                            } else {
+                                // 检查下一行是否是嵌套属性
+                                let nextIndent = -1;
+                                for (let j = i + 1; j < lines.length; j++) {
+                                    if (lines[j].trim()) {
+                                        nextIndent = lines[j].match(/^\s*/)[0].length;
+                                        break;
+                                    }
+                                }
+                                if (nextIndent > indent) {
+                                    currentObject[trimmedKey] = {};
+                                    currentObject = currentObject[trimmedKey];
+                                    indentLevel = indent;
+                                } else {
+                                    currentObject[trimmedKey] = '';
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // 处理特殊字段（例如日期）
+                if (metadata.date) {
+                    try {
+                        const date = new Date(metadata.date);
+                        metadata.date = date.toISOString().replace('Z', '+08:00');
+                    } catch (e) {
+                        console.error('Date parsing error:', e);
+                    }
+                }
+
+                // 默认元数据，确保所有字段都有初始值
+                const defaultMetadata = {
+                    subtitle: '',
+                    draft: false,
+                    description: '',
+                    keywords: '',
+                    license: 'CC',
+                    comment: true,
+                    weight: 0,
+                    tags: [],
+                    categories: [],
+                    hiddenFromHomePage: false,
+                    hiddenFromSearch: false,
+                    hiddenFromRss: false,
+                    hiddenFromRelated: false,
+                    summary: '',
+                    resources: [],
+                    toc: true,
+                    math: false,
+                    lightgallery: true,
+                    password: '',
+                    message: '',
+                    repost: {
+                        enable: false,
+                        url: ''
+                    }
+                };
+
+                // 合并默认值和解析出的元数据
+                metadata = { ...defaultMetadata, ...metadata };
+
+                return {
+                    metadata: metadata,
+                    // 同样在替换时支持 CRLF 换行
+                    content: content.replace(/^---[\s\S]*?---\r?\n?/, '').trim()
+                };
+            }
+
+
+            // 生成YAML的函数
+            function generateYamlFrontMatter(metadata) {
+                let yaml = '---\n';
+
+                // 确保关键字段的顺序
+                const orderedKeys = [
+                    'title', 'subtitle', 'date', 'slug', 'draft', 'description',
+                    'keywords', 'license', 'comment', 'weight', 'tags', 'categories',
+                    'hiddenFromHomePage', 'hiddenFromSearch', 'hiddenFromRss',
+                    'hiddenFromRelated', 'summary', 'resources', 'toc', 'math',
+                    'lightgallery', 'password', 'message', 'repost'
+                ];
+
+                // 先处理有序的键
+                orderedKeys.forEach(key => {
+                    if (metadata.hasOwnProperty(key)) {
+                        const value = metadata[key];
+                        if (value === undefined || value === '') return;
+
+                        if (Array.isArray(value)) {
+                            yaml += `${key}:\n`;
+                            value.forEach(item => {
+                                yaml += `  - ${item}\n`;
+                            });
+                        } else if (typeof value === 'object' && value !== null) {
+                            yaml += `${key}:\n`;
+                            Object.entries(value).forEach(([subKey, subValue]) => {
+                                if (subValue !== undefined && subValue !== '') {
+                                    yaml += `  ${subKey}: ${subValue}\n`;
+                                }
+                            });
+                        } else {
+                            yaml += `${key}: ${value}\n`;
+                        }
+                    }
+                });
+
+                // 处理其他未在orderedKeys中的键
+                Object.entries(metadata).forEach(([key, value]) => {
+                    if (!orderedKeys.includes(key) && value !== undefined && value !== '') {
+                        if (Array.isArray(value)) {
+                            yaml += `${key}:\n`;
+                            value.forEach(item => {
+                                yaml += `  - ${item}\n`;
+                            });
+                        } else if (typeof value === 'object' && value !== null) {
+                            yaml += `${key}:\n`;
+                            Object.entries(value).forEach(([subKey, subValue]) => {
+                                if (subValue !== undefined && subValue !== '') {
+                                    yaml += `  ${subKey}: ${subValue}\n`;
+                                }
+                            });
+                        } else {
+                            yaml += `${key}: ${value}\n`;
+                        }
+                    }
+                });
+
+                yaml += '---\n';
+                return yaml;
+            }
+
+            // 标签和分类的管理
+            const tags = new Set();
+            const categories = new Set();
+
+            function addTag(tag) {
+                if (tag && !tags.has(tag)) {
+                    tags.add(tag);
+                    updateTagsDisplay();
+                }
+                document.getElementById('tagInput').value = '';
+            }
+
+            function addCategory(category) {
+                if (category && !categories.has(category)) {
+                    categories.add(category);
+                    updateCategoriesDisplay();
+                }
+                document.getElementById('categoryInput').value = '';
+            }
+
+            function updateTagsDisplay() {
+                const container = document.getElementById('tagContainer');
+                container.innerHTML = '';
+                tags.forEach(tag => {
+                    const tagElement = document.createElement('div');
+                    tagElement.className = 'tag-item';
+                    tagElement.innerHTML = `
+                        ${tag}
+                        <span class="tag-remove" onclick="removeTag('${tag}')">&times;</span>
+                    `;
+                    container.appendChild(tagElement);
+                });
+            }
+
+            function updateCategoriesDisplay() {
+                const container = document.getElementById('categoryContainer');
+                container.innerHTML = '';
+                categories.forEach(category => {
+                    const categoryElement = document.createElement('div');
+                    categoryElement.className = 'tag-item';
+                    categoryElement.innerHTML = `
+                        ${category}
+                        <span class="tag-remove" onclick="removeCategory('${category}')">&times;</span>
+                    `;
+                    container.appendChild(categoryElement);
+                });
+            }
+
+            // 事件监听器
+            document.getElementById('addTagBtn').addEventListener('click', () => {
+                const tag = document.getElementById('tagInput').value.trim();
+                addTag(tag);
+            });
+
+            document.getElementById('addCategoryBtn').addEventListener('click', () => {
+                const category = document.getElementById('categoryInput').value.trim();
+                addCategory(category);
+            });
+
             var editor = editormd("content-editor", {
                 width: "100%",
-                height: 640,
+                height: 800,
                 path: "/api/static/lib/",
                 imageUpload: true,
                 imageFormats: ["jpg", "jpeg", "gif", "png", "bmp", "webp"],
                 imageUploadURL: "/api/uploadImage",
-                onload: function() {
-                    // 初始化完成后执行的逻辑
+                onload: function () {
                     const urlParams = new URLSearchParams(window.location.search);
                     const filePath = urlParams.get('file');
 
@@ -54,14 +430,128 @@
                         fetch(`/api/getContent?filePath=${encodeURIComponent(filePath)}`)
                             .then(response => response.json())
                             .then(data => {
-                                editor.setMarkdown(data.content);
+                                const parsed = parseYamlFrontMatter(data.content);
+                                if (parsed && parsed.metadata) {
+                                    const metadata = parsed.metadata;
+                                    // 填充所有元数据字段
+                                    document.getElementById('title').value = metadata.title || '';
+                                    document.getElementById('date').value = metadata.date ? new Date(metadata.date).toISOString().slice(0, 16) : '';
+                                    document.getElementById('description').value = metadata.description || '';
+
+                                    // 清空现有的标签和分类
+                                    tags.clear();
+                                    categories.clear();
+
+                                    // 添加标签和分类
+                                    if (metadata.tags) {
+                                        metadata.tags.forEach(tag => addTag(tag));
+                                    }
+                                    if (metadata.categories) {
+                                        metadata.categories.forEach(category => addCategory(category));
+                                    }
+
+                                    // 更新标签和分类显示
+                                    updateTagsDisplay();
+                                    updateCategoriesDisplay();
+
+                                    // 保存原始元数据以供更新时使用
+                                    window.originalMetadata = metadata;
+
+                                    // 只显示文章内容
+                                    editor.setMarkdown(parsed.content);
+                                } else {
+                                    editor.setMarkdown(data.content);
+                                }
                             });
                     }
                 }
+
             });
 
-            // 捕获粘贴事件
-            document.getElementById('content-editor').addEventListener('paste', function(event) {
+            // 修改发布按钮事件处理
+            document.getElementById('publishButton').addEventListener('click', function () {
+                // 显示Modal
+                document.getElementById('metadataModal').classList.remove('hidden');
+
+                // 填充现有的元数据
+                if (window.originalMetadata) {
+                    document.getElementById('title').value = window.originalMetadata.title || '';
+                    document.getElementById('date').value = window.originalMetadata.date ?
+                        new Date(window.originalMetadata.date).toISOString().slice(0, 16) : '';
+                    document.getElementById('description').value = window.originalMetadata.description || '';
+
+                    // 清空并重新填充标签和分类
+                    tags.clear();
+                    categories.clear();
+                    if (window.originalMetadata.tags) {
+                        window.originalMetadata.tags.forEach(tag => addTag(tag));
+                    }
+                    if (window.originalMetadata.categories) {
+                        window.originalMetadata.categories.forEach(category => addCategory(category));
+                    }
+                    updateTagsDisplay();
+                    updateCategoriesDisplay();
+                }
+            });
+
+            // 关闭Modal的处理函数
+            function closeModal() {
+                document.getElementById('metadataModal').classList.add('hidden');
+            }
+
+            document.getElementById('closeModal').addEventListener('click', closeModal);
+            document.getElementById('cancelModal').addEventListener('click', closeModal);
+
+            // 保存并发布的处理函数
+            document.getElementById('saveAndPublish').addEventListener('click', function () {
+                // 获取更新后的元数据
+                const metadata = {
+                    ...window.originalMetadata,
+                    title: document.getElementById('title').value,
+                    date: document.getElementById('date').value,
+                    description: document.getElementById('description').value,
+                    tags: Array.from(tags),
+                    categories: Array.from(categories)
+                };
+
+                // 生成新的内容
+                const yamlFrontMatter = generateYamlFrontMatter(metadata);
+                const content = editor.getMarkdown();
+                const newContent = yamlFrontMatter + '\n' + content;
+
+                // 保存文件
+                const filePath = document.getElementById('filePath').value;
+                fetch('/api/hugo/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ filePath: filePath, content: newContent })
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            // 如果保存成功，执行构建
+                            return fetch('/api/hugo/build', {
+                                method: 'POST'
+                            });
+                        }
+                        throw new Error('保存失败');
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            alert('发布成功！');
+                            window.location.href = '/api/list';
+                        } else {
+                            throw new Error('构建失败');
+                        }
+                    })
+                    .catch(error => {
+                        alert(error.message);
+                    });
+            });
+
+            // 粘贴图片处理
+            document.getElementById('content-editor').addEventListener('paste', function (event) {
                 var clipboardData = event.clipboardData || window.clipboardData;
                 var items = clipboardData.items;
 
@@ -75,50 +565,37 @@
                             method: 'POST',
                             body: formData
                         })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.result === "success") {
-                                // 将图片URL插入到Editor.md编辑器中
-                                editor.insertValue(`![image](${data.url})`);
-                            } else {
-                                alert("Image upload failed");
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            alert("Image upload failed");
-                        });
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.result === "success") {
+                                    editor.insertValue(`![image](${data.url})`);
+                                } else {
+                                    alert("图片上传失败");
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                alert("图片上传失败");
+                            });
 
                         event.preventDefault();
                         break;
                     }
                 }
             });
-
-            document.getElementById('updatePostForm').addEventListener('submit', function(event) {
-                event.preventDefault();
-                const filePath = document.getElementById('filePath').value;
-                const content = editor.getMarkdown();
-                fetch('/api/hugo/update', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ filePath: filePath, content: content })
-                })
-                .then(response => {
-                    if (response.ok) {
-                        alert('File updated successfully');
-                    } else {
-                        response.json().then(data => {
-                            alert(`Error: ${data.error}`);
-                        });
-                    }
-                });
-            });
         });
+
+        // 全局函数用于删除标签和分类
+        window.removeTag = function (tag) {
+            tags.delete(tag);
+            updateTagsDisplay();
+        }
+
+        window.removeCategory = function (category) {
+            categories.delete(category);
+            updateCategoriesDisplay();
+        }
     </script>
-    <!-- 引入 Bootstrap JS 和 jQuery -->
-    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
+
 </html>

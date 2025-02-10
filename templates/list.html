@@ -1,25 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>All Posts</title>
-    <!-- 引入 Bootstrap CSS -->
-    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <title>所有文章</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* 移除列表的默认样式，设置内边距为0 */
         ul {
             list-style-type: none;
             padding-left: 0;
         }
+
         /* 二级列表的左边距为20px */
         ul ul {
             margin-left: 20px;
         }
+
         /* 列表项的上下外边距为5px */
         li {
             margin: 5px 0;
         }
+
         /* 设置列表项的样式，包括块级显示、内边距、外边距和边框 */
         .list-group-item {
             display: block;
@@ -28,47 +31,58 @@
             border: 1px solid #ddd;
             border-radius: 0.25rem;
         }
+
         /* 设置链接的样式，移除下划线，设置颜色为蓝色 */
         .list-group-item a {
             text-decoration: none;
             color: #007bff;
         }
+
         /* 鼠标悬停时添加下划线 */
         .list-group-item a:hover {
             text-decoration: underline;
         }
+
         /* 设置删除按钮的样式，浮动到右边 */
         .list-group-item .delete-btn {
             float: right;
         }
     </style>
 </head>
-<body class="container mt-5">
-    <h1 class="mb-4">All Posts</h1>
-    
-    <!-- 新建文章表单 -->
-    <div class="mb-4">
-        <form id="newPostForm" class="form-inline mb-3">
-            <div class="form-group mr-2">
-                <label for="contentName" class="sr-only">Content Name:</label>
-                <input type="text" id="contentName" name="contentName" class="form-control" placeholder="Enter post name" required>
+
+<body class="bg-gray-50">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-8">所有文章</h1>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <!-- 新建文章表单 -->
+            <form id="newPostForm" class="flex gap-4 mb-6">
+                <input type="text" id="contentName" name="contentName"
+                    class="flex-1 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="输入文章名称" required>
+                <button type="submit"
+                    class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition duration-200">
+                    创建
+                </button>
+            </form>
+
+            <!-- 搜索框 -->
+            <div class="mb-6">
+                <input type="text" id="searchInput"
+                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="搜索文章...">
             </div>
-            <button type="submit" class="btn btn-primary">Create</button>
-        </form>
-        <!-- 搜索框 -->
-        <div class="form-group mb-3">
-            <input type="text" id="searchInput" class="form-control" placeholder="Search posts...">
+
+            <!-- 构建按钮 -->
+            <button id="buildButton"
+                class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg transition duration-200">
+                构建
+            </button>
         </div>
-        <!-- 构建按钮 -->
-        <button id="buildButton" class="btn btn-success mb-4">Build</button>
+
+        <!-- 文章列表 -->
+        <div id="directory-tree" class="bg-white rounded-lg shadow-lg p-6"></div>
     </div>
-
-    <!-- 文章列表 -->
-    <div id="directory-tree" class="list-group"></div>
-
-    <!-- 引入 Bootstrap JS 和 jQuery -->
-    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
     <script>
         // 当DOM加载完成后执行以下代码
@@ -78,45 +92,55 @@
             // 获取用于显示目录树的容器元素
             const treeContainer = document.getElementById('directory-tree');
 
-            // 递归创建目录树
+            // 递归创建优化版目录树，采用卡片布局和 TailwindCSS 样式
             function createTree(data, container) {
                 const ul = document.createElement('ul');
-                ul.classList.add('list-group');
+                ul.classList.add('divide-y', 'divide-gray-200');
                 data.forEach(node => {
                     const li = document.createElement('li');
-                    li.classList.add('list-group-item');
-                    li.textContent = node.name;
+                    li.classList.add('p-4', 'bg-white', 'rounded', 'mb-2', 'shadow-sm');
+
+                    // 显示节点标题
+                    const headerDiv = document.createElement('div');
+                    headerDiv.classList.add('flex', 'justify-between', 'items-center', 'font-semibold', 'text-gray-800');
+                    headerDiv.textContent = node.name;
+                    li.appendChild(headerDiv);
+
+                    // 如果节点下有文章，则生成文章列表
                     if (node.posts) {
-                        const postsUl = document.createElement('ul');
-                        postsUl.classList.add('list-group');
+                        const postsDiv = document.createElement('div');
+                        postsDiv.classList.add('mt-2', 'space-y-2');
                         node.posts.forEach(post => {
-                            const postLi = document.createElement('li');
-                            postLi.classList.add('list-group-item');
+                            const postItem = document.createElement('div');
+                            postItem.classList.add('flex', 'justify-between', 'items-center', 'p-2', 'bg-gray-50', 'rounded');
+                            const normalizedPath = post.path.replace(/\\/g, '/').replace('content/posts/', '');
                             const postLink = document.createElement('a');
-                            // 设置文章链接的URL，包含文章的路径
-                            postLink.href = `/api/update?file=${encodeURIComponent(post.path)}`;
+                            postLink.href = `/api/update?file=${encodeURIComponent(normalizedPath)}`;
                             postLink.textContent = post.name;
-                            postLink.classList.add('d-block');
+                            postLink.classList.add('text-blue-500', 'hover:underline');
 
                             const deleteButton = document.createElement('button');
                             deleteButton.textContent = 'Delete';
-                            deleteButton.classList.add('btn', 'btn-danger', 'btn-sm', 'delete-btn');
-                            // 为删除按钮添加点击事件监听器
-                            deleteButton.addEventListener('click', function() {
+                            deleteButton.classList.add('bg-red-500', 'hover:bg-red-600', 'text-white', 'px-2', 'py-1', 'text-xs', 'rounded');
+                            deleteButton.addEventListener('click', function () {
                                 if (confirm('Are you sure you want to delete this post?')) {
-                                    // 调用删除文章的函数
-                                    deletePost(post.path, postLi);
+                                    deletePost(normalizedPath, postItem);
                                 }
                             });
 
-                            postLi.appendChild(postLink);
-                            postLi.appendChild(deleteButton);
-                            postsUl.appendChild(postLi);
+                            postItem.appendChild(postLink);
+                            postItem.appendChild(deleteButton);
+                            postsDiv.appendChild(postItem);
                         });
-                        li.appendChild(postsUl);
+                        li.appendChild(postsDiv);
                     }
+
+                    // 如果有子节点则递归处理，增加左侧缩进
                     if (node.children) {
-                        createTree(node.children, li);
+                        const childContainer = document.createElement('div');
+                        childContainer.classList.add('ml-4', 'mt-2');
+                        createTree(node.children, childContainer);
+                        li.appendChild(childContainer);
                     }
                     ul.appendChild(li);
                 });
@@ -127,7 +151,7 @@
             createTree([treeData], treeContainer);
 
             // 为新建文章表单添加提交事件监听器
-            document.getElementById('newPostForm').addEventListener('submit', function(event) {
+            document.getElementById('newPostForm').addEventListener('submit', function (event) {
                 event.preventDefault();
                 const contentName = document.getElementById('contentName').value;
                 // 发送POST请求到服务器，创建新文章
@@ -138,34 +162,34 @@
                     },
                     body: JSON.stringify({ contentName: contentName })
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.filePath) {
-                        // 如果成功创建文章，重定向到文章编辑页面
-                        window.location.href = `/api/update?file=${encodeURIComponent(data.filePath)}`;
-                    } else {
-                        alert('Failed to create the post.');
-                    }
-                });
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.filePath) {
+                            // 如果成功创建文章，重定向到文章编辑页面
+                            window.location.href = `/api/update?file=${encodeURIComponent(data.filePath.replace('content/posts/', ''))}`;
+                        } else {
+                            alert('Failed to create the post.');
+                        }
+                    });
             });
 
             // 为构建按钮添加点击事件监听器
-            document.getElementById('buildButton').addEventListener('click', function() {
+            document.getElementById('buildButton').addEventListener('click', function () {
                 // 发送POST请求到服务器，触发构建操作
                 fetch('/api/hugo/build', {
                     method: 'POST',
                 })
-                .then(response => {
-                    if (response.ok) {
-                        alert('Build successful');
-                    } else {
-                        alert('Failed to build.');
-                    }
-                });
+                    .then(response => {
+                        if (response.ok) {
+                            alert('Build successful');
+                        } else {
+                            alert('Failed to build.');
+                        }
+                    });
             });
 
             // 为搜索框添加输入事件监听器
-            document.getElementById('searchInput').addEventListener('input', function(event) {
+            document.getElementById('searchInput').addEventListener('input', function (event) {
                 const query = event.target.value.toLowerCase();
                 // 调用过滤文章的函数
                 filterPosts(query);
@@ -193,15 +217,17 @@
                     },
                     body: JSON.stringify({ filePath: filePath })
                 })
-                .then(response => {
-                    if (response.ok) {
-                        postElement.remove();
-                    } else {
-                        alert('Failed to delete the post.');
-                    }
-                });
+
+                    .then(response => {
+                        if (response.ok) {
+                            postElement.remove();
+                        } else {
+                            alert('Failed to delete the post.');
+                        }
+                    });
             }
         });
     </script>
 </body>
+
 </html>
