@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"fmt"
-	"github.com/gen2brain/avif"
 	"hugo_backend/config"
 	"hugo_backend/utils"
 	"image"
@@ -14,6 +13,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"time"
+
+	"github.com/gen2brain/avif"
 
 	"github.com/gin-gonic/gin"
 )
@@ -56,7 +57,7 @@ func UploadImage(c *gin.Context) {
 	day := now.Format("02")
 
 	// 构建目录路径
-	uploadPath := filepath.Join("./uploads", year, month, day)
+	uploadPath := filepath.Join("./static/api/i", year, month, day)
 	if err := os.MkdirAll(uploadPath, os.ModePerm); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create upload directory"})
 		return
@@ -103,9 +104,9 @@ func GetImage(c *gin.Context) {
 	day := c.Param("day")
 	filename := c.Param("filename")
 
-	filePath := filepath.Join("./uploads", year, month, day, filename)
+	filePath := filepath.Join("./static/api/i", year, month, day, filename)
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		c.JSON(http.StatusNotFound, gin.H{"result": "false", "code": http.NotFound, "error": "Image not found"})
+		c.JSON(http.StatusNotFound, gin.H{"result": "false", "code": http.StatusNotFound, "error": "Image not found"})
 		return
 	}
 
